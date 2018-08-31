@@ -86,20 +86,22 @@ extern int cheats_read_buf(cheats_t *cheats, const char *buf);
  * cheats_write - Write cheats from a cheats object to a stream.
  * @cheats: cheats object
  * @stream: stream to write cheats to
+ * @omit_empty_tag: omit tags equal to zero
  * @return: CHEATS_TRUE: success, CHEATS_FALSE: error
  */
-extern void cheats_write(cheats_t *cheats, FILE *stream);
+extern void cheats_write(cheats_t *cheats, FILE *stream, int omit_empty_tag);
 
 /**
  * cheats_write_file - Write cheats from a cheats object to a text file.
  * @cheats: cheats objects
  * @filename: name of file to write cheats to
+ * @omit_empty_tag: omit tags equal to zero
  * @return: CHEATS_TRUE: success, CHEATS_FALSE: error
  *
  * The function cheats_error_text() can be used to obtain more information about
  * an error.
  */
-extern int cheats_write_file(cheats_t *cheats, const char *filename);
+extern int cheats_write_file(cheats_t *cheats, const char *filename, int omit_empty_tag);
 
 /**
  * cheats_error_text - Return the text of the last error.

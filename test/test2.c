@@ -31,7 +31,7 @@ int test2(int argc, char *argv[])
 	}
 
 	printf("cheats:\n\n");
-	cheats_write(&cheats, stdout);
+	cheats_write(&cheats, stdout, 1);
 	cheats_destroy(&cheats);
 
 	return 0;

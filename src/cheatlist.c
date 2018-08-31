@@ -19,13 +19,15 @@
  * @tag: arbitrary information
  * @return: ptr to new code object, or NULL on mem alloc error
  */
-code_t *make_code(uint32_t addr, uint32_t val, uint32_t tag)
+code_t *make_code(const char * arg1, uint16_t arg1_size, const char * arg2, uint16_t arg2_size, uint32_t tag)
 {
 	code_t *code = (code_t*)malloc(sizeof(code_t));
 
 	if (code != NULL) {
-		code->addr = addr;
-		code->val = val;
+		code->arg1 = (char*)arg1;
+		code->arg1_size = arg1_size;
+		code->arg2 = (char*)arg2;
+		code->arg2_size = arg2_size;
 		code->tag = tag;
 	}
 
@@ -92,8 +94,19 @@ static inline void __remove_codes(codelist_t *list, int _free)
 
 	while ((code = CODES_FIRST(list)) != NULL) {
 		CODES_REMOVE(list, code);
-		if (_free)
+		if (_free) {
+			if (code->arg1 && code->arg1_size > 0) {
+				free(code->arg1);
+				code->arg1 = NULL;
+			}
+
+			if (code->arg2 && code->arg2_size > 0) {
+				free(code->arg2);
+				code->arg2 = NULL;
+			}
+
 			free(code);
+		}
 	}
 }
 

@@ -23,16 +23,13 @@
 #endif
 
 /* Max line length to parse */
-#define LINE_MAX	255
-
-/* Number of digits per cheat code */
-#define CODE_DIGITS	16
+#define LINE_MAX	511
 
 /* Tokens used for parsing */
-#define TOK_NO		0
-#define TOK_GAME_TITLE	1
-#define TOK_CHEAT_DESC	2
-#define TOK_CHEAT_CODE	4
+#define TOK_NO				0
+#define TOK_GAME_TITLE		1
+#define TOK_CHEAT_DESC		2
+#define TOK_CHEAT_CODE		4
 
 /**
  * parser_ctx_t - parser context
@@ -66,15 +63,33 @@ static const char *tok2str(int tok)
 	};
 
 	switch (tok) {
-	case TOK_GAME_TITLE:
-		return str[0];
-	case TOK_CHEAT_DESC:
-		return str[1];
-	case TOK_CHEAT_CODE:
-		return str[2];
-	default:
-		return NULL;
+		case TOK_GAME_TITLE:
+			return str[0];
+		case TOK_CHEAT_DESC:
+			return str[1];
+		case TOK_CHEAT_CODE:
+			return str[2];
+		default:
+			return NULL;
 	}
+}
+
+/*
+ * hexstr2bytes - Convert a hex string (eg: "DEAD1337C0DE") to a byte array (0xDEAD1337C0DE)
+ */
+static const char *hexstr2bytes(const char *s)
+{
+    size_t i;
+    size_t length = strlen(s) / 2;
+	char * buffer = (char*)malloc(length);
+	memset(buffer, 0, length);
+	
+    for (i = 0; i < length; i++) {
+        sscanf(s, "%2hhx", &buffer[i]);
+        s += 2;
+    }
+
+	return buffer;
 }
 
 /*
@@ -101,23 +116,32 @@ static inline int is_game_title(const char *s)
  * is_cheat_code - Return non-zero if @s indicates a cheat code.
  *
  * Example: 10B8DAFA 00003F00
+ * Example: 0 00B8DAFA 3F00
+ * Example: F10 00B80000 00B8DA00
  */
 static inline int is_cheat_code(const char *s)
 {
-	int i = 0;
+	int w = 0, i = 0;
 
+	// Counts the number of words, returning 0 if it hits a non-hexadecimal digit
 	while (*s) {
-		if (isxdigit(*s)) {
-			if (++i > CODE_DIGITS)
-				return 0;
+		if (isspace(*s)) {
+			if (i > 0) {
+				w++;
+				i = 0;
+			}
 		}
-		else if (!isspace(*s)) {
+		else if (!isxdigit(*s)) {
 			return 0;
+		}
+		else {
+			i++;
 		}
 		s++;
 	}
 
-	return (i == CODE_DIGITS);
+	// Return true if we have either 2 or 3 words
+	return w < 3 && w > 0;
 }
 
 /*
@@ -176,19 +200,32 @@ static cheat_t *__make_cheat(const char *desc)
  */
 static code_t *__make_code(const char *s)
 {
-	char digits[CODE_DIGITS];
-	int i = 0;
-	uint32_t addr, val;
+	int w = 0;
+	int i[] = { 0, 0, 0 };
+	char a1[LINE_MAX + 1], a2[LINE_MAX + 1];
+	const char *line = s;
+	uint32_t tag = 0;
 
-	while (*s) {
-		if (isxdigit(*s))
-			digits[i++] = *s;
+	while (*s && w < 3) {
+		if (isxdigit(*s)) {
+			i[w]++;
+		}
+		else if (isspace(*s)) {
+			if (i > 0) {
+				w++;
+			}
+		}
 		s++;
 	}
 
-	sscanf(digits, "%08X %08X", &addr, &val);
+	if (w == 1) {
+		sscanf(line, "%s %s", (char*)a1, (char*)a2);
+	}
+	else if (w > 1) {
+		sscanf(line, "%08x %s %s", &tag, a1, a2);
+	}
 
-	return make_code(addr, val, 0);
+	return make_code(hexstr2bytes(a1), strlen(a1)/2, hexstr2bytes(a2), strlen(a2)/2, tag);
 }
 
 /*
