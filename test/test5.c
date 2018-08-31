@@ -17,9 +17,9 @@ static void add_game(gamelist_t *list)
 	cheat = make_cheat("Inf. Bar", NULL, 0);
 	CHEATS_INSERT_TAIL(&game->cheats, cheat);
 
-	code = make_code(0x123, 0x456, 0);
+	code = make_code((char*)0x123, 4, (char*)0x456, 4, 0);
 	CODES_INSERT_TAIL(&cheat->codes, code);
-	code = make_code(0x789, 0, 0);
+	code = make_code((char*)0x789, 4, (char*)0, 4, 0);
 	CODES_INSERT_TAIL(&cheat->codes, code);
 	remove_code(&cheat->codes, code, 1);
 }
@@ -34,7 +34,7 @@ static void add_game2(gamelist_t *list)
 	int i = 0;
 
 	for (i = 0; i < 5; i++) {
-		code = make_code(0x12345678, i, 0);
+		code = make_code((char*)0x12345678, 4, (char*)i, 4, 0);
 		CODES_INSERT_TAIL(&codes, code);
 	}
 
@@ -52,7 +52,7 @@ int test5(int argc, char *argv[])
 	cheats_init(&cheats);
 	add_game(&cheats.games);
 	add_game2(&cheats.games);
-	cheats_write(&cheats, stdout);
+	cheats_write(&cheats, stdout, 1);
 	cheats_destroy(&cheats);
 
 	return 0;

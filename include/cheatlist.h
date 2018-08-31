@@ -69,13 +69,17 @@
 
 /**
  * code_t - a code object
- * @addr: code address
- * @val: code value
+ * @arg1: code argument 1
+ * @arg1_size: argument 1 length
+ * @arg2: code argument 2
+ * @arg2_size: argument 2 length
  * @tag: arbitrary information
  */
 typedef struct _code {
-	uint32_t	addr;
-	uint32_t	val;
+	char*		arg1;
+	char*		arg2;
+	uint16_t arg1_size;
+	uint16_t arg2_size;
 	uint32_t	tag;
 
 	STAILQ_ENTRY(_code) _FIELD;
@@ -166,12 +170,14 @@ typedef STAILQ_HEAD(_gamelist, _game) gamelist_t;
 
 /**
  * make_code - Create a new code object.
- * @addr: code address
- * @val: code value
+ * @arg1: code argument 1
+ * @arg1_size: argument 1 length
+ * @arg2: code argument 2
+ * @arg2_size: argument 2 length
  * @tag: arbitrary information
  * @return: ptr to new code object, or NULL on mem alloc error
  */
-extern code_t *make_code(uint32_t addr, uint32_t val, uint32_t tag);
+extern code_t *make_code(const char * arg1, uint16_t arg1_size, const char * arg2, uint16_t arg2_size, uint32_t tag);
 
 /**
  * make_cheat - Create a new cheat object and populate it.

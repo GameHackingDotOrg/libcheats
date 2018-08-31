@@ -110,20 +110,36 @@ int cheats_read_buf(cheats_t *cheats, const char *buf)
  * cheats_write - Write cheats from a cheats object to a stream.
  * @cheats: cheats object
  * @stream: stream to write cheats to
+ * @omit_empty_tag: omit tags equal to zero
  * @return: CHEATS_TRUE: success, CHEATS_FALSE: error
  */
-void cheats_write(cheats_t *cheats, FILE *stream)
+void cheats_write(cheats_t *cheats, FILE *stream, int omit_empty_tag)
 {
 	game_t *game;
 	cheat_t *cheat;
 	code_t *code;
+	size_t i;
 
 	GAMES_FOREACH(game, &cheats->games) {
 		fprintf(stream, "\"%s\"\n", game->title);
 		CHEATS_FOREACH(cheat, &game->cheats) {
 			fprintf(stream, "%s\n", cheat->desc);
 			CODES_FOREACH(code, &cheat->codes) {
-				fprintf(stream, "%08X %08X\n", code->addr, code->val);
+				if (!omit_empty_tag || code->tag != 0) {
+					fprintf(stream, "%X ", code->tag);
+				}
+
+				for (i = 0; i < code->arg1_size; i++) {
+					fprintf(stream, "%02X", (unsigned char)code->arg1[i]);
+				}
+
+				fprintf(stream, " ");
+
+				for (i = 0; i < code->arg2_size; i++) {
+					fprintf(stream, "%02X", (unsigned char)code->arg2[i]);
+				}
+
+				fprintf(stream, "\n");
 			}
 		}
 		fprintf(stream, "\n//--------\n\n");
@@ -134,12 +150,13 @@ void cheats_write(cheats_t *cheats, FILE *stream)
  * cheats_write_file - Write cheats from a cheats object to a text file.
  * @cheats: cheats objects
  * @filename: name of file to write cheats to
+ * @omit_empty_tag: omit tags equal to zero
  * @return: CHEATS_TRUE: success, CHEATS_FALSE: error
  *
  * The function cheats_error_text() can be used to obtain more information about
  * an error.
  */
-int cheats_write_file(cheats_t *cheats, const char *filename)
+int cheats_write_file(cheats_t *cheats, const char *filename, int omit_empty_tag)
 {
 	FILE *fp;
 
@@ -149,7 +166,7 @@ int cheats_write_file(cheats_t *cheats, const char *filename)
 		return CHEATS_FALSE;
 	}
 
-	cheats_write(cheats, fp);
+	cheats_write(cheats, fp, omit_empty_tag);
 	fclose(fp);
 	return CHEATS_TRUE;
 }
